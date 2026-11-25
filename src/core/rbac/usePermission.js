@@ -1,0 +1,103 @@
+import { useAuthStore } from '../auth/auth.store.js';
+import { ACTIONS } from './actions.js';
+
+export const ROLE_PERMISSIONS = Object.freeze({
+  HUB_MANAGER: new Set([
+    ACTIONS.HUB.READ,
+    ACTIONS.HUB.UPDATE,
+    ACTIONS.HUB.UPDATE_OPERATIONAL,
+    ACTIONS.HUB.MANAGE_STAFF,
+    ACTIONS.STAFF.ASSIGN,
+    ACTIONS.STAFF.REMOVE,
+    ACTIONS.STAFF.VIEW,
+    ACTIONS.CROP.VIEW,
+    ACTIONS.MANDI_RATE.VIEW,
+    ACTIONS.MANDI_RATE.SET_HUB,
+    ACTIONS.GRN.ISSUE,
+    ACTIONS.GRN.VIEW,
+    ACTIONS.GRN.APPROVE,
+    ACTIONS.ORDER.CREATE,
+    ACTIONS.ORDER.VIEW,
+    ACTIONS.ORDER.DISPATCH,
+    ACTIONS.ORDER.DELIVER,
+    ACTIONS.ORDER.CANCEL,
+    ACTIONS.PAYOUT.CREATE,
+    ACTIONS.PAYOUT.VIEW,
+    ACTIONS.CASH_LEDGER.TRANSFER,
+    ACTIONS.CASH_LEDGER.HANDOVER,
+    ACTIONS.CASH_LEDGER.DEPOSIT,
+    ACTIONS.CASH_LEDGER.VIEW,
+    ACTIONS.CHARGE.VIEW,
+    ACTIONS.DISPUTE.CREATE,
+    ACTIONS.DISPUTE.VIEW,
+    ACTIONS.DISPUTE.RESOLVE,
+    ACTIONS.STORAGE.UPLOAD,
+    ACTIONS.STORAGE.VIEW_PRIVATE
+  ]),
+  STORE_OPERATOR: new Set([
+    ACTIONS.HUB.READ,
+    ACTIONS.STAFF.VIEW,
+    ACTIONS.CROP.VIEW,
+    ACTIONS.MANDI_RATE.VIEW,
+    ACTIONS.GRN.ISSUE,
+    ACTIONS.GRN.VIEW,
+    ACTIONS.ORDER.CREATE,
+    ACTIONS.ORDER.VIEW,
+    ACTIONS.ORDER.DISPATCH,
+    ACTIONS.ORDER.DELIVER,
+    ACTIONS.CASH_LEDGER.HANDOVER,
+    ACTIONS.CASH_LEDGER.VIEW,
+    ACTIONS.CHARGE.VIEW,
+    ACTIONS.DISPUTE.CREATE,
+    ACTIONS.DISPUTE.VIEW,
+    ACTIONS.STORAGE.UPLOAD
+  ]),
+  FARMER: new Set([
+    ACTIONS.CROP.VIEW,
+    ACTIONS.MANDI_RATE.VIEW,
+    ACTIONS.ORDER.VIEW,
+    ACTIONS.PAYOUT.VIEW,
+    ACTIONS.DISPUTE.CREATE,
+    ACTIONS.DISPUTE.VIEW,
+    ACTIONS.STORAGE.UPLOAD
+  ]),
+  BUYER: new Set([
+    ACTIONS.CROP.VIEW,
+    ACTIONS.MANDI_RATE.VIEW,
+    ACTIONS.ORDER.CREATE,
+    ACTIONS.ORDER.VIEW,
+    ACTIONS.DISPUTE.CREATE,
+    ACTIONS.DISPUTE.VIEW,
+    ACTIONS.STORAGE.UPLOAD
+  ])
+});
+
+export function hasPermission({ roles = [], activeRole = null } = {}, action) {
+  if (!action) {
+    return true;
+  }
+
+  const roleList = Array.isArray(roles) ? roles : [];
+  if (roleList.includes('SUPER_ADMIN') || roleList.includes('ADMIN')) {
+    return true;
+  }
+
+  if (activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN') {
+    return true;
+  }
+
+  if (activeRole && ROLE_PERMISSIONS[activeRole]?.has(action)) {
+    return true;
+  }
+
+  return roleList.some((role) => ROLE_PERMISSIONS[role]?.has(action));
+}
+
+export function usePermission(action) {
+  const roles = useAuthStore((state) => state.roles);
+  const activeRole = useAuthStore((state) => state.activeRole);
+
+  return hasPermission({ roles, activeRole }, action);
+}
+
+export default usePermission;
