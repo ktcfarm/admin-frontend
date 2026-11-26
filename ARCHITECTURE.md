@@ -182,9 +182,9 @@ Application state must survive page refreshes and support shareable, bookmarkabl
 | **Reusable UI Kit** | Stateless design primitives (`Select`, `DataTable`, `Modal`, `SlideOver`, `QrCode`, `OtpPinInput`, etc.) | N/A | Completed |
 | **Auth & Security** | PIN login, Email OTP authentication, PIN reset flow, session hydration | Public / Auth | Completed |
 | **Command Center** | Executive KPI dashboard, operational alerts, RBAC diagnostic | Public / Admin | Completed |
-| **KTC Hubs & Staff** | Hub geolocation, storage capacity, operational status, operator staff assignment | `HUB:READ`, `HUB:CREATE`, `STAFF:VIEW` | Pending |
+| **KTC Hubs & Staff** | Hub geolocation, storage capacity, operational status, operator staff assignment | `HUB:READ`, `HUB:CREATE`, `STAFF:VIEW` | Completed |
 | **Pricing Engine** | Daily mandi benchmark rates, minimum support price (MSP), hub price overrides | `MANDI_RATE:VIEW`, `MANDI_RATE:SET_GLOBAL`, `MANDI_RATE:SET_HUB` | Pending |
-| **Crop Catalogue** | Crop master hierarchy, grade specifications, unit conversion matrix | `CROP:VIEW`, `CROP:CREATE` | Pending |
+| **Crop Catalogue** | Crop master hierarchy, grade specifications, unit conversion matrix | `CROP:VIEW`, `CROP:CREATE` | Completed |
 | **Farmer KYC & Directory** | Farmer registration audit, land record verification, bank accounts | `STAFF:VIEW` | Pending |
 | **Order Routing** | Commercial buyer orders, truck loading allocation, fulfillment dispatch | `ORDER:VIEW`, `ORDER:DISPATCH` | Pending |
 | **Finance & Ledgers** | Hub safe reconciliation, operator cash float handovers, OTP verification | `CASH_LEDGER:VIEW`, `CASH_LEDGER:TRANSFER` | Pending |

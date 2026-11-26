@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
   body {
     @apply bg-[#F6F8F7] text-gray-900 antialiased font-sans;
   }

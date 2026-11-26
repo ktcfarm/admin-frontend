@@ -10,18 +10,30 @@ export const queryKeys = {
     list: (filters = {}) => ['hubs', 'list', filters],
     details: () => ['hubs', 'detail'],
     detail: (id) => ['hubs', 'detail', id],
-    staff: (hubId) => ['hubs', 'staff', hubId]
+    staff: (hubId) => ['hubs', 'staff', hubId],
+    staffCandidates: (search = '') => ['hubs', 'staff-candidates', search]
   },
   crops: {
     all: ['crops'],
+    meta: () => ['crops', 'meta'],
+    categories: (filters = {}) => ['crops', 'categories', filters],
+    categoryDetail: (id) => ['crops', 'category-detail', id],
     lists: () => ['crops', 'list'],
     list: (filters = {}) => ['crops', 'list', filters],
     details: () => ['crops', 'detail'],
     detail: (id) => ['crops', 'detail', id],
-    categories: () => ['crops', 'categories']
+    varieties: (filters = {}) => ['crops', 'varieties', filters],
+    varietyDetail: (id) => ['crops', 'variety-detail', id]
   },
   pricing: {
     all: ['pricing'],
+    rates: (filters = {}) => ['pricing', 'rates', filters],
+    detail: (id) => ['pricing', 'detail', id],
+    resolve: (params = {}) => ['pricing', 'resolve', params],
+    categories: () => ['pricing', 'categories'],
+    crops: (categoryId = '') => ['pricing', 'crops', categoryId],
+    varieties: () => ['pricing', 'varieties'],
+    hubs: () => ['pricing', 'hubs'],
     mandiRates: (filters = {}) => ['pricing', 'mandi-rates', filters],
     hubRates: (hubId, filters = {}) => ['pricing', 'hub-rates', hubId, filters]
   },

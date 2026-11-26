@@ -45,14 +45,14 @@ export const Input = forwardRef(function Input(
         </label>
       )}
 
-      <div className="relative flex items-center rounded-lg shadow-sm">
+      <div className="relative flex items-center rounded-lg shadow-sm w-full min-w-0">
         {prefix && (
-          <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm select-none">
+          <span className="inline-flex items-center shrink-0 px-2.5 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm select-none">
             {prefix}
           </span>
         )}
 
-        <div className="relative flex-1 flex items-center">
+        <div className="relative flex-1 min-w-0 flex items-center">
           {leftIcon && (
             <div className="absolute left-3 flex items-center pointer-events-none text-gray-400">
               {renderIcon(leftIcon, 'w-4 h-4')}
@@ -66,7 +66,7 @@ export const Input = forwardRef(function Input(
             disabled={disabled}
             required={required}
             className={cn(
-              'block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
+              'block w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors',
               'focus:outline-none focus:border-[#0E4B2E] focus:ring-1 focus:ring-[#0E4B2E]',
               leftIcon && 'pl-9',
               (rightIcon || isPassword) && 'pr-9',
@@ -103,7 +103,7 @@ export const Input = forwardRef(function Input(
         </div>
 
         {suffix && (
-          <span className="inline-flex items-center px-3 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm select-none">
+          <span className="inline-flex items-center shrink-0 px-2.5 py-2 rounded-r-lg border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-xs font-medium select-none">
             {suffix}
           </span>
         )}

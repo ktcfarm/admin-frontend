@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -18,11 +19,13 @@ import {
   ChevronRight as BreadcrumbSeparator
 } from 'lucide-react';
 import { navConfig } from '../core/config/nav.config.js';
-import { ROUTES, useCopy } from '../core/constants/index.js';
+import { ROUTES, ROLES, ROLE_METADATA, STAFF_ROLES, useCopy } from '../core/constants/index.js';
 import { useAuthStore } from '../core/auth/auth.store.js';
 import { useUiStore } from '../core/ui/ui.store.js';
 import { usePermission } from '../core/rbac/usePermission.js';
-import { useLogout } from '../features/auth/hooks/useAuth.js';
+import { httpClient } from '../core/http/http.factory.js';
+import { queryKeys } from '../core/query/query-keys.js';
+import { useLogout, useSwitchRole, useCurrentUser } from '../features/auth/hooks/useAuth.js';
 import { SearchBar, Select } from '../shared/components/index.js';
 import { cn } from '../shared/utils/cn.js';
 
@@ -70,21 +73,41 @@ export function AdminShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const copy = useCopy();
+  const queryClient = useQueryClient();
 
   const user = useAuthStore((state) => state.user);
+  const roles = useAuthStore((state) => state.roles);
   const activeRole = useAuthStore((state) => state.activeRole);
   const staffAssignments = useAuthStore((state) => state.staffAssignments);
   const activeHubId = useAuthStore((state) => state.activeHubId);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setActiveHub = useAuthStore((state) => state.setActiveHub);
+
+  useCurrentUser();
 
   const sidebarCollapsed = useUiStore((state) => state.sidebarCollapsed);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const language = useUiStore((state) => state.language);
   const setLanguage = useUiStore((state) => state.setLanguage);
+  const addToast = useUiStore((state) => state.addToast);
 
   const logoutMutation = useLogout({
     onSettled: () => {
       navigate(ROUTES.LOGIN, { replace: true });
+    }
+  });
+
+  const switchRoleMutation = useSwitchRole({
+    onSuccess: (payload) => {
+      const nextRole = payload?.activeRole;
+      if (nextRole === ROLES.SUPER_ADMIN || nextRole === ROLES.ADMIN) {
+        setActiveHub(null);
+      }
+      addToast({
+        type: 'success',
+        title: copy.shell.roleSwitchedTitle,
+        message: `${copy.shell.roleSwitchedPrefix} ${ROLE_METADATA[nextRole]?.label || nextRole}`
+      });
     }
   });
 
@@ -135,14 +158,119 @@ export function AdminShell() {
     return name.slice(0, 2).toUpperCase();
   }, [user, copy]);
 
+  const isSuperAdminHolder = useMemo(
+    () => Array.isArray(roles) && roles.includes(ROLES.SUPER_ADMIN),
+    [roles]
+  );
+
+  const roleOptions = useMemo(() => {
+    const allowedList = isSuperAdminHolder
+      ? STAFF_ROLES
+      : (Array.isArray(roles) ? roles : []).filter((r) => STAFF_ROLES.includes(r));
+
+    const uniqueRoles = Array.from(new Set(allowedList));
+    if (uniqueRoles.length === 0 && activeRole) {
+      uniqueRoles.push(activeRole);
+    }
+
+    return uniqueRoles.map((roleKey) => ({
+      value: roleKey,
+      label: ROLE_METADATA[roleKey]?.label || roleKey,
+      subtitle: ROLE_METADATA[roleKey]?.description || null
+    }));
+  }, [isSuperAdminHolder, roles, activeRole]);
+
+  const canBrowseAllHubs =
+    isSuperAdminHolder ||
+    activeRole === ROLES.SUPER_ADMIN ||
+    activeRole === ROLES.ADMIN;
+
+  const { data: allActiveHubs = [] } = useQuery({
+    queryKey: queryKeys.hubs.list({ selector: 'shell', isActive: 'true', limit: 100 }),
+    queryFn: async () => {
+      const res = await httpClient.get('/hubs', {
+        params: { page: 1, limit: 100, isActive: 'true', sortBy: 'name', sortOrder: 'asc' }
+      });
+      return res?.data ?? [];
+    },
+    enabled: Boolean(isAuthenticated) && canBrowseAllHubs
+  });
+
+  const isGlobalViewRole =
+    activeRole === ROLES.SUPER_ADMIN || activeRole === ROLES.ADMIN;
+
   const hubOptions = useMemo(() => {
-    if (!Array.isArray(staffAssignments)) return [];
-    return staffAssignments.map((assignment) => {
-      const hubId = assignment.hubId || assignment.id;
-      const hubName = assignment.hubName || assignment.name || hubId;
-      return { value: hubId, label: hubName };
+    if (canBrowseAllHubs) {
+      const dynamicHubs = (Array.isArray(allActiveHubs) ? allActiveHubs : []).map((hub) => ({
+        value: hub.id,
+        label: hub.name,
+        subtitle: hub.code
+      }));
+
+      if (isGlobalViewRole) {
+        return [{ value: '', label: copy.shell.allHubsLabel }, ...dynamicHubs];
+      }
+
+      return dynamicHubs;
+    }
+
+    if (!Array.isArray(staffAssignments)) {
+      return [];
+    }
+
+    const roleFiltered = staffAssignments.filter((a) => !activeRole || a.role === activeRole);
+    const pool = roleFiltered.length > 0 ? roleFiltered : staffAssignments;
+    const seen = new Set();
+
+    return pool
+      .filter((assignment) => {
+        const hubId = assignment.hubId || assignment.id;
+        if (!hubId || seen.has(hubId)) return false;
+        seen.add(hubId);
+        return true;
+      })
+      .map((assignment) => {
+        const hubId = assignment.hubId || assignment.id;
+        const hubName = assignment.hubName || assignment.hub?.name || assignment.name || assignment.hubCode || hubId;
+        const hubCode = assignment.hubCode || assignment.hub?.code || null;
+        return { value: hubId, label: hubName, subtitle: hubCode };
+      });
+  }, [canBrowseAllHubs, allActiveHubs, isGlobalViewRole, copy.shell.allHubsLabel, staffAssignments, activeRole]);
+
+  useEffect(() => {
+    if (isGlobalViewRole || hubOptions.length === 0) {
+      return;
+    }
+
+    const hasCurrentHub = hubOptions.some((opt) => opt.value === activeHubId);
+    if (!activeHubId || !hasCurrentHub) {
+      setActiveHub(hubOptions[0].value);
+    }
+  }, [isGlobalViewRole, hubOptions, activeHubId, setActiveHub]);
+
+  const handleRoleChange = (event) => {
+    const nextRole = event.target.value;
+    if (!nextRole || nextRole === activeRole) return;
+    switchRoleMutation.mutate({ targetRole: nextRole });
+  };
+
+  const handleHubChange = (event) => {
+    const nextHubId = event.target.value || null;
+    if (nextHubId === (activeHubId || null)) return;
+    setActiveHub(nextHubId);
+    queryClient.invalidateQueries();
+    const selectedLabel = hubOptions.find((opt) => opt.value === (nextHubId || ''))?.label;
+    addToast({
+      type: 'info',
+      title: copy.shell.hubSwitchedTitle,
+      message: nextHubId
+        ? `${copy.shell.hubSwitchedPrefix} ${selectedLabel || nextHubId}`
+        : copy.shell.hubSwitchedAll
     });
-  }, [staffAssignments]);
+  };
+
+  const singleRoleLabel = ROLE_METADATA[activeRole]?.label || activeRole || copy.shell.defaultRoleLabel;
+  const singleHubLabel = hubOptions[0]?.label || copy.shell.noHubsAssigned;
 
   return (
     <div className="h-screen w-screen overflow-hidden flex bg-ktc-canvas">
@@ -293,7 +421,7 @@ export function AdminShell() {
               </button>
             </div>
 
-            {hubOptions.length > 0 && (
+            {hubOptions.length > 1 ? (
               <div className="w-44">
                 <Select
                   size="sm"
@@ -301,8 +429,32 @@ export function AdminShell() {
                   options={hubOptions}
                   value={activeHubId || ''}
                   placeholder={copy.shell.selectHubPlaceholder}
-                  onChange={(e) => setActiveHub(e.target.value)}
+                  onChange={handleHubChange}
                 />
+              </div>
+            ) : hubOptions.length === 1 ? (
+              <div className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-gray-200 bg-gray-50 text-xs font-medium text-gray-700 max-w-[180px]">
+                <Building2 className="w-3.5 h-3.5 text-ktc-green shrink-0" />
+                <span className="truncate">{singleHubLabel}</span>
+              </div>
+            ) : null}
+
+            {roleOptions.length > 1 ? (
+              <div className="w-44">
+                <Select
+                  size="sm"
+                  leftIcon={ShieldCheck}
+                  options={roleOptions}
+                  value={activeRole || ''}
+                  placeholder={copy.shell.selectRolePlaceholder}
+                  disabled={switchRoleMutation.isPending}
+                  onChange={handleRoleChange}
+                />
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border border-emerald-200 bg-ktc-green-light text-xs font-semibold text-ktc-green">
+                <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{singleRoleLabel}</span>
               </div>
             )}
 

@@ -26,6 +26,11 @@ export const authApi = {
     return res?.data ?? res;
   },
 
+  switchRole: async ({ targetRole }) => {
+    const res = await httpClient.post('/auth/switch-role', { targetRole });
+    return res?.data ?? res;
+  },
+
   logout: async () => {
     const res = await httpClient.post('/auth/logout');
     return res?.data ?? res;
