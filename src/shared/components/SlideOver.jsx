@@ -6,7 +6,8 @@ const sizeClasses = {
   sm: 'max-w-sm',
   md: 'max-w-md',
   lg: 'max-w-xl',
-  xl: 'max-w-2xl',
+  xl: 'max-w-2xl lg:max-w-3xl',
+  '2xl': 'max-w-4xl',
 };
 
 export function SlideOver({
@@ -57,15 +58,15 @@ export function SlideOver({
         aria-hidden="true"
       />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
         <div
           className={cn(
-            'w-screen bg-white shadow-2xl border-l border-gray-200 flex flex-col',
+            'w-screen bg-white shadow-2xl border-l border-gray-200 flex flex-col h-full',
             sizeClasses[size] || sizeClasses.md,
             className
           )}
         >
-          <div className="flex items-start justify-between px-6 py-5 border-b border-gray-100">
+          <div className="shrink-0 flex items-start justify-between px-6 py-5 border-b border-gray-100 bg-white">
             <div>
               {title && (
                 <h3 id={titleId} className="text-lg font-semibold text-gray-900">
@@ -96,7 +97,7 @@ export function SlideOver({
           </div>
 
           {footer && (
-            <div className="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50/75 border-t border-gray-100">
+            <div className="shrink-0 flex items-center justify-end gap-3 px-6 py-4 bg-gray-50/90 border-t border-gray-100">
               {footer}
             </div>
           )}

@@ -250,3 +250,49 @@ export function useCurrentUser(options = {}) {
     ...options
   });
 }
+
+export function useSwitchRole(options = {}) {
+  const { onSuccess, onError, ...restOptions } = options;
+  const setSession = useAuthStore((state) => state.setSession);
+  const addToast = useUiStore((state) => state.addToast);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    ...restOptions,
+    mutationFn: ({ targetRole }) => authApi.switchRole({ targetRole }),
+    onSuccess: (data, variables, context) => {
+      const payload = data?.data ?? data;
+      const user = payload?.user ?? payload;
+      const accessToken = payload?.accessToken ?? payload?.tokens?.accessToken ?? null;
+      const refreshToken = payload?.refreshToken ?? payload?.tokens?.refreshToken ?? null;
+      const activeRole = payload?.activeRole ?? variables?.targetRole ?? null;
+      const roles = payload?.roles ?? user?.roles ?? [];
+      const staffAssignments = payload?.staffAssignments ?? user?.staffAssignments ?? [];
+
+      setSession({
+        user,
+        accessToken,
+        refreshToken,
+        activeRole,
+        roles,
+        staffAssignments
+      });
+
+      queryClient.invalidateQueries();
+
+      if (onSuccess) {
+        onSuccess(payload, variables, context);
+      }
+    },
+    onError: (error, variables, context) => {
+      addToast({
+        type: 'error',
+        title: 'Role Switch Failed',
+        message: error.message || 'Unable to switch active role.'
+      });
+      if (onError) {
+        onError(error, variables, context);
+      }
+    }
+  });
+}

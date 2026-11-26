@@ -4,7 +4,6 @@ import { ACTIONS } from './actions.js';
 export const ROLE_PERMISSIONS = Object.freeze({
   HUB_MANAGER: new Set([
     ACTIONS.HUB.READ,
-    ACTIONS.HUB.UPDATE,
     ACTIONS.HUB.UPDATE_OPERATIONAL,
     ACTIONS.HUB.MANAGE_STAFF,
     ACTIONS.STAFF.ASSIGN,
@@ -72,32 +71,26 @@ export const ROLE_PERMISSIONS = Object.freeze({
   ])
 });
 
-export function hasPermission({ roles = [], activeRole = null } = {}, action) {
+export function hasPermission({ activeRole = null } = {}, action) {
   if (!action) {
     return true;
   }
 
-  const roleList = Array.isArray(roles) ? roles : [];
-  if (roleList.includes('SUPER_ADMIN') || roleList.includes('ADMIN')) {
-    return true;
+  if (!activeRole) {
+    return false;
   }
 
   if (activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN') {
     return true;
   }
 
-  if (activeRole && ROLE_PERMISSIONS[activeRole]?.has(action)) {
-    return true;
-  }
-
-  return roleList.some((role) => ROLE_PERMISSIONS[role]?.has(action));
+  return Boolean(ROLE_PERMISSIONS[activeRole]?.has(action));
 }
 
 export function usePermission(action) {
-  const roles = useAuthStore((state) => state.roles);
   const activeRole = useAuthStore((state) => state.activeRole);
 
-  return hasPermission({ roles, activeRole }, action);
+  return hasPermission({ activeRole }, action);
 }
 
 export default usePermission;

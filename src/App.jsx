@@ -5,6 +5,9 @@ import { AdminShell } from './layouts/AdminShell.jsx';
 import { LoginPage } from './features/auth/pages/LoginPage.jsx';
 import { ResetPinPage } from './features/auth/pages/ResetPinPage.jsx';
 import { CommandCenterPage } from './features/dashboard/pages/CommandCenterPage.jsx';
+import { CatalogPage } from './features/catalog/pages/CatalogPage.jsx';
+import { HubsPage } from './features/hubs/pages/HubsPage.jsx';
+import { PricingPage } from './features/pricing/pages/PricingPage.jsx';
 import { UiKitShowcasePage } from './features/ui-kit/pages/UiKitShowcasePage.jsx';
 import { ACTIONS } from './core/rbac/actions.js';
 import { ROUTES, useCopy } from './core/constants/index.js';
@@ -48,7 +51,7 @@ export function App() {
           path="pricing"
           element={
             <ProtectedRoute requiredAction={ACTIONS.MANDI_RATE.VIEW}>
-              <PlaceholderPage title={copy.nav.pricingEngine} action={ACTIONS.MANDI_RATE.VIEW} />
+              <PricingPage />
             </ProtectedRoute>
           }
         />
@@ -56,7 +59,7 @@ export function App() {
           path="catalog"
           element={
             <ProtectedRoute requiredAction={ACTIONS.CROP.VIEW}>
-              <PlaceholderPage title={copy.nav.cropCatalog} action={ACTIONS.CROP.VIEW} />
+              <CatalogPage />
             </ProtectedRoute>
           }
         />
@@ -64,7 +67,7 @@ export function App() {
           path="hubs"
           element={
             <ProtectedRoute requiredAction={ACTIONS.HUB.READ}>
-              <PlaceholderPage title={copy.nav.ktcShops} action={ACTIONS.HUB.READ} />
+              <HubsPage />
             </ProtectedRoute>
           }
         />

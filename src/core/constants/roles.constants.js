@@ -7,6 +7,18 @@ export const ROLES = Object.freeze({
   BUYER: 'BUYER'
 });
 
+export const STAFF_ROLES = Object.freeze([
+  ROLES.SUPER_ADMIN,
+  ROLES.ADMIN,
+  ROLES.HUB_MANAGER,
+  ROLES.STORE_OPERATOR
+]);
+
+export const HUB_ASSIGNABLE_ROLES = Object.freeze([
+  ROLES.HUB_MANAGER,
+  ROLES.STORE_OPERATOR
+]);
+
 export const ROLE_METADATA = Object.freeze({
   [ROLES.SUPER_ADMIN]: Object.freeze({
     value: ROLES.SUPER_ADMIN,
@@ -52,5 +64,13 @@ export const STAFF_ROLE_OPTIONS = Object.freeze([
     subtitle: ROLE_METADATA[ROLES.STORE_OPERATOR].description
   }
 ]);
+
+export const HUB_STAFF_ROLE_OPTIONS = Object.freeze(
+  HUB_ASSIGNABLE_ROLES.map((roleKey) => ({
+    value: roleKey,
+    label: ROLE_METADATA[roleKey].label,
+    subtitle: ROLE_METADATA[roleKey].description
+  }))
+);
 
 export default ROLES;
