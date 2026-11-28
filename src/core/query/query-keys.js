@@ -4,6 +4,10 @@ export const queryKeys = {
     me: () => ['auth', 'me'],
     session: () => ['auth', 'session']
   },
+  dashboard: {
+    all: ['dashboard'],
+    summary: (filters = {}) => ['dashboard', 'summary', filters]
+  },
   hubs: {
     all: ['hubs'],
     lists: () => ['hubs', 'list'],
